@@ -1,8 +1,10 @@
 import { ChangeEvent, useState, useRef } from "react";
+import type { LinksFunction } from "remix";
 import * as marked from "marked";
 import DesktopIcon from "~/icons/DesktopIcon";
-import type { LinksFunction } from "remix";
 import styles from "~/styles/markdown.css";
+import parseFrontMatter from "front-matter";
+import { IAttributes } from "~/types";
 
 // const domPurify = DOMPurify(window as unknown as Window);
 
@@ -11,27 +13,28 @@ export const links: LinksFunction = () => {
 };
 
 export default function Index() {
-  const [content, setContent] = useState<string>("# content");
+  const [content, setContent] = useState<string>("");
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
-  const toggleRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
+  // used to extract all the custom style
+  // inside ---
   const extractCustomStyle = (code: string) => {
-    if (code.includes("---")) {
-      const extractedValue = code
-        .slice(code.indexOf("---") + 1, code.lastIndexOf("---"))
-        .replace(/\n/g, " ");
-      const extractedBackgroundImage = extractedValue
-        .slice(extractedValue.indexOf(":") + 2)
-        .trim();
-      if (containerRef.current) {
-        if (extractedBackgroundImage) {
-          containerRef.current.style.backgroundImage = `url(${extractedBackgroundImage})`;
-          containerRef.current.style.backgroundRepeat = "no-repeat";
-          containerRef.current.style.backgroundSize = "cover";
-          containerRef.current.style.backgroundPosition = "center";
-        }
+    try {
+      const { attributes }: { attributes: IAttributes } =
+        parseFrontMatter(code);
+      console.log({ attributes });
+      if (containerRef.current && containerRef.current) {
+        if (attributes.color)
+          contentRef!.current!.style.color = attributes.color;
+        if (attributes?.backgroundColor)
+          containerRef.current.style.background = attributes.backgroundColor;
+        else if (attributes?.backgroundImage)
+          containerRef.current.style.background = `no-repeat center/cover url(${attributes.backgroundImage})`;
       }
+    } catch (error) {
+      console.log({ error });
     }
   };
 
@@ -51,6 +54,24 @@ export default function Index() {
       ""
     );
   };
+
+  // This function hepls to convert hex color to rgba
+  // We may need this later
+  /*
+  function hexToRgbA(hex: string) {
+    var c: any;
+    if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+      c = hex.substring(1).split("");
+      if (c.length == 3) {
+        c = [c[0], c[0], c[1], c[1], c[2], c[2]];
+      }
+      c = "0x" + c.join("");
+      return (
+        "rgba(" + [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(",") + ",1)"
+      );
+    }
+    throw new Error("Bad Hex");
+  }*/
 
   const handleContentChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     setContent(event.target.value);
@@ -73,8 +94,13 @@ export default function Index() {
   };
 
   const toggleFullScreen = () => {
-    containerRef.current?.requestFullscreen();
-    setIsFullScreen(true);
+    if (!isFullScreen) {
+      containerRef.current?.requestFullscreen();
+      setIsFullScreen(true);
+    } else {
+      setIsFullScreen(false);
+      document.exitFullscreen();
+    }
   };
 
   return (
@@ -96,14 +122,14 @@ export default function Index() {
         </section>
         <section ref={containerRef} className="w-3/5 min-h-screen relative">
           <div
-            title="Toggle fullscreen"
+            title={`${isFullScreen ? "Exit" : "Toggle"} full screen`}
             className="absolute bottom-2 right-2 bg-darkGrey rounded-full flex justify-center items-center w-8 h-8 opacity-50 hover:opacity-90 cursor-pointer duration-300"
             onClick={toggleFullScreen}
           >
             <DesktopIcon />
           </div>
           <div
-            ref={toggleRef}
+            ref={contentRef}
             className={`min-h-screen w-full pl-3 text-bgColor flex flex-col justify-center`}
             dangerouslySetInnerHTML={renderMarkdownText(content)}
           />
