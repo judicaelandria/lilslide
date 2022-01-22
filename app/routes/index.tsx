@@ -1,9 +1,10 @@
 import { ChangeEvent, useState, useRef } from "react";
 import type { LinksFunction } from "remix";
 import * as marked from "marked";
+import parseFrontMatter from "front-matter";
+
 import DesktopIcon from "~/icons/DesktopIcon";
 import styles from "~/styles/markdown.css";
-import parseFrontMatter from "front-matter";
 import { IAttributes } from "~/types";
 
 // const domPurify = DOMPurify(window as unknown as Window);
@@ -24,7 +25,6 @@ export default function Index() {
     try {
       const { attributes }: { attributes: IAttributes } =
         parseFrontMatter(code);
-      console.log({ attributes });
       if (containerRef.current && containerRef.current) {
         if (attributes.color)
           contentRef!.current!.style.color = attributes.color;
@@ -38,8 +38,16 @@ export default function Index() {
     }
   };
 
+  const createNewPage = (code: string) => {
+    const shoudCreateNewPage = code.match(/^(\[page[0-9]{1}\])$/gi);
+    if (shoudCreateNewPage) {
+      console.log("should add a new page to the slide");
+    }
+  };
+
   const renderMarkdownText = (code: string) => {
     extractCustomStyle(code);
+    createNewPage(code);
     const content = removeCustomStyle(code);
     const __html = marked.marked(content, {
       sanitize: true,
@@ -55,28 +63,12 @@ export default function Index() {
     );
   };
 
-  // This function hepls to convert hex color to rgba
-  // We may need this later
-  /*
-  function hexToRgbA(hex: string) {
-    var c: any;
-    if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
-      c = hex.substring(1).split("");
-      if (c.length == 3) {
-        c = [c[0], c[0], c[1], c[1], c[2], c[2]];
-      }
-      c = "0x" + c.join("");
-      return (
-        "rgba(" + [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(",") + ",1)"
-      );
-    }
-    throw new Error("Bad Hex");
-  }*/
-
   const handleContentChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     setContent(event.target.value);
   };
 
+  // Gonna need this later
+  /*
   const syntaxHiglighter = (code: string) => {
     marked.marked.setOptions({
       highlight: function (code, lang, callback) {
@@ -92,6 +84,7 @@ export default function Index() {
 
     return marked.marked.parse(code);
   };
+  */
 
   const toggleFullScreen = () => {
     if (!isFullScreen) {
