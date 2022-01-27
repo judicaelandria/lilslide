@@ -3,4 +3,5 @@ export type IAttributes = {
   backgroundImage?: string;
   backgroundColor?: string;
   color?: string;
+  align?: string;
 };
