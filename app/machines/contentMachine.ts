@@ -16,10 +16,13 @@ const contentMachine = createMachine({
       id: "writing",
     },
   },
+  // @ts-expect-error
   on: {
     CHANGE: {
       target: ".writing",
-      actions: assign({ content: (_context, event: IEvent) => event.content }),
+      actions: assign({
+        content: (_context, event: IEvent) => event.content,
+      }),
     },
   },
 });

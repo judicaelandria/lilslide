@@ -1,1 +1,1 @@
-export { default as contenMachine } from "./contentMachine";
+export { default as contentMachine } from "./contentMachine";

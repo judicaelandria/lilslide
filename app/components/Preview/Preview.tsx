@@ -1,33 +1,26 @@
 import React from "react";
-import { LinksFunction } from "remix";
 import * as marked from "marked";
 import parseFrontMatter from "front-matter";
+import { useActor } from "@xstate/react";
 
 import { IAttributes } from "~/types";
-import styles from "~/styles/markdown.css";
-import ChevronLeftIcon from "~/icons/ChevronLeftIcon";
-import ChevronRightIcon from "~/icons/ChevronRightIcon";
-import { useMachine } from "@xstate/react";
-import { contenMachine } from "~/machines";
-
-export const links: LinksFunction = () => {
-  return [{ rel: "stylesheet", href: styles }];
-};
+import { ChevronLeftIcon, ChevronRightIcon } from "~/icons";
+import { ContentContext } from "~/contexts";
+interface IPreviewProps {
+  presentation: boolean;
+}
 
 let count = 0;
-const Preview = () => {
-  const [current, _] = useMachine(contenMachine);
-  const [isFullScreen, setIsFullScreen] = React.useState<boolean>(false);
+
+const Preview = ({ presentation }: IPreviewProps) => {
   const containerRef = React.useRef<HTMLElement>(null);
   const contentRef = React.useRef<HTMLDivElement>(null);
   const [pages, setPages] = React.useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = React.useState<number>(0);
+  const globalServices = React.useContext(ContentContext);
+  const [current] = useActor(globalServices.contentService);
 
   const { content } = current.context;
-
-  React.useEffect(() => {
-    console.log({ content });
-  }, [content]);
 
   const hasPrev = count > 0;
   const hasNext = currentIndex < pages.length - 1;
@@ -49,19 +42,26 @@ const Preview = () => {
     try {
       const { attributes }: { attributes: IAttributes } =
         parseFrontMatter(code);
-      if (containerRef.current && containerRef.current) {
-        if (attributes.color)
-          contentRef!.current!.style.color = attributes.color;
-        if (attributes.align)
-          contentRef!.current!.style.textAlign = attributes.align;
-        if (attributes?.backgroundColor)
-          containerRef.current.style.background = attributes.backgroundColor;
-        else if (attributes?.backgroundImage)
-          containerRef.current.style.background = `no-repeat center/cover url(${attributes.backgroundImage})`;
+      if (containerRef.current) {
+        [
+          "backgroundColor",
+          "backgroundImage",
+          "color",
+          "alignItems",
+          "justifyContent",
+        ].forEach((key: string) => {
+          if (attributes[key]) {
+            if (attributes[key] === "backgroundImage") {
+              containerRef.current!.style.background = `no-repeat center/cover url(${attributes.backgroundImage})`;
+            }
+            // @ts-expect-error
+            contentRef.current!.style[key] = attributes[key];
+            // @ts-expect-error
+            containerRef.current!.style[key] = attributes[key];
+          }
+        });
       }
-    } catch (error) {
-      console.log({ error });
-    }
+    } catch (error) {}
   };
 
   const createNewPage = (content: string) => {
@@ -93,18 +93,22 @@ const Preview = () => {
     );
   };
 
+  React.useEffect(() => {
+    if (containerRef.current) {
+      if (presentation) containerRef.current?.requestFullscreen();
+    }
+  }, [presentation]);
+
   return (
     <section
       ref={containerRef}
-      className={`${
-        isFullScreen ? "w-full" : "w-2/4"
-      } min-h-screen relative bg-white`}
+      className="w-2/4 min-h-screen relative bg-white"
     >
       {pages.length > 1 ? (
         <div className="w-full relative m-auto">
           <div
             ref={contentRef}
-            className={`min-h-screen w-full pl-3 text-bgColor flex flex-col justify-center`}
+            className="min-h-screen w-full px-3 text-bgColor flex flex-col"
             dangerouslySetInnerHTML={renderMarkdownText(pages[currentIndex])}
           />
           <div className="absolute w-full bottom-2 transform -translate-y-1/2 flex justify-end items-start px-3 gap-6">
@@ -132,7 +136,7 @@ const Preview = () => {
         <>
           <div
             ref={contentRef}
-            className={`min-h-screen w-full pl-3 text-bgColor flex flex-col justify-center`}
+            className={`min-h-screen w-full px-3 text-bgColor flex flex-col justify-center`}
             dangerouslySetInnerHTML={renderMarkdownText(content)}
           />
         </>
