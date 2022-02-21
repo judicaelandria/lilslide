@@ -43,7 +43,6 @@ export const useMouseResize = (
           const { clientX } = event as PointerEvent;
           setWidth((prevWidth) => {
             const latestWidth = Math.floor(clientX);
-            const plus = latestWidth - prevWidth;
             if (latestWidth <= 400) return 400;
             return prevWidth + (latestWidth - prevWidth);
           });

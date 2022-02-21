@@ -17,11 +17,17 @@ export const links: LinksFunction = () => {
 
 export default function Index() {
   const [presentationState, setPresentationState] = React.useState(false);
+  const [previewWidth, setPreviewWidth] = React.useState<number>(0);
   const [current, send] = useMachine(dataMachine);
   const { lilslideData } = current.context;
+  const containerRef = React.useRef<HTMLElement>(null);
 
   const getPresentationState = () => {
     setPresentationState(true);
+  };
+
+  const getPreviewWidth = (width: number) => {
+    setPreviewWidth(containerRef.current!.clientWidth - width);
   };
 
   const togglePresentationMode = (event: KeyboardEvent) => {
@@ -57,11 +63,14 @@ export default function Index() {
   return (
     <Provider>
       <main className="w-full min-h-screen">
-        <article className="w-full flex">
-          <Resize className="w-2/4 min-h-screen bg-darkBlue">
+        <article className="w-full flex" ref={containerRef}>
+          <Resize
+            className="min-h-screen bg-darkBlue"
+            getPreviewWidth={getPreviewWidth}
+          >
             <Editor getPresentationState={getPresentationState} />
           </Resize>
-          <Preview presentation={presentationState} />
+          <Preview presentation={presentationState} width={previewWidth} />
         </article>
       </main>
     </Provider>

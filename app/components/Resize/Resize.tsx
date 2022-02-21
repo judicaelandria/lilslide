@@ -6,6 +6,7 @@ import { animated } from "@react-spring/web";
 interface IResizeProps {
   children: React.ReactNode;
   className?: string;
+  getPreviewWidth?: (width: number) => void;
 }
 
 interface IWSizeProps {
@@ -22,30 +23,36 @@ const WindowSize = ({ showSize, width, clientHeight }: IWSizeProps) => {
   ) : null;
 };
 
-const Resize = React.memo(({ children, className }: IResizeProps) => {
-  const clientRef = React.useRef<HTMLDivElement>(null);
-  const ref = React.useRef<HTMLDivElement>(null);
-  const { width, showSize } = useMouseResize(700, ref);
+const Resize = React.memo(
+  ({ children, className, getPreviewWidth }: IResizeProps) => {
+    const clientRef = React.useRef<HTMLDivElement>(null);
+    const ref = React.useRef<HTMLDivElement>(null);
+    const { width, showSize } = useMouseResize(700, ref);
 
-  return (
-    <animated.div
-      className={clsx(className, "relative")}
-      style={{ width, minWidth: 400 }}
-      ref={clientRef}
-    >
-      {children}
-      <WindowSize
-        width={width}
-        showSize={showSize}
-        clientHeight={clientRef.current?.clientHeight}
-      />
-      <div
-        className="resize-overlay cursor-w-resize w-1 absolute right-0 hover:bg-blue-100"
-        style={{ height: "92.4vh", top: "7.6vh" }}
-        ref={ref}
-      />
-    </animated.div>
-  );
-});
+    React.useEffect(() => {
+      if (typeof getPreviewWidth === "function") getPreviewWidth(width);
+    }, [width]);
+
+    return (
+      <animated.div
+        className={clsx(className, "relative")}
+        style={{ width, minWidth: 400 }}
+        ref={clientRef}
+      >
+        {children}
+        <WindowSize
+          width={width}
+          showSize={showSize}
+          clientHeight={clientRef.current?.clientHeight}
+        />
+        <div
+          className="resize-overlay cursor-w-resize w-1 absolute right-0 hover:bg-blue-100"
+          style={{ height: "92.4vh", top: "7.6vh" }}
+          ref={ref}
+        />
+      </animated.div>
+    );
+  }
+);
 
 export default Resize;

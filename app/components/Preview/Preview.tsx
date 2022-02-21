@@ -8,11 +8,12 @@ import { ChevronLeftIcon, ChevronRightIcon } from "~/icons";
 import { ContentContext } from "~/contexts";
 interface IPreviewProps {
   presentation: boolean;
+  width: number;
 }
 
 let count = 0;
 
-const Preview = ({ presentation }: IPreviewProps) => {
+const Preview = ({ presentation, width }: IPreviewProps) => {
   const containerRef = React.useRef<HTMLElement>(null);
   const contentRef = React.useRef<HTMLDivElement>(null);
   const [pages, setPages] = React.useState<string[]>([]);
@@ -102,7 +103,8 @@ const Preview = ({ presentation }: IPreviewProps) => {
   return (
     <section
       ref={containerRef}
-      className="w-2/4 min-h-screen relative bg-white"
+      className="min-h-screen relative bg-white"
+      style={{ width }}
     >
       {pages.length > 1 ? (
         <div className="w-full relative m-auto">
