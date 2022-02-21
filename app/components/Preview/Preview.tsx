@@ -51,7 +51,7 @@ const Preview = ({ presentation }: IPreviewProps) => {
           "justifyContent",
         ].forEach((key: string) => {
           if (attributes[key]) {
-            if (attributes[key] === "backgroundImage") {
+            if (Object.keys(attributes).includes("backgroundImage")) {
               containerRef.current!.style.background = `no-repeat center/cover url(${attributes.backgroundImage})`;
             }
             // @ts-expect-error

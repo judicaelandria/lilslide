@@ -1,6 +1,4 @@
 import React from "react";
-import Dropdown from "../Dropdown";
-
 interface INavbarProps {
   toggleFullscreen: () => void;
 }
@@ -14,7 +12,7 @@ const Navbar = ({ toggleFullscreen }: INavbarProps) => {
 
   return (
     <div className="w-full h-18 flex justify-between items-center bg-darkBlue px-4 py-2 drop-shadow-xl">
-      <Dropdown />
+      <img src="/images/logo.svg" />
       <input
         className="outline-none bg-transparent text-white focus:border-b"
         type="text"
