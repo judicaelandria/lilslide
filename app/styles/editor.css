@@ -1,0 +1,14 @@
+#editor::-webkit-scrollbar {
+  width: 16px;
+  z-index: 10;
+}
+#editor::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+#editor::-webkit-scrollbar-thumb {
+  background-color: hsla(249, 60%, 49%, 0.424);
+  cursor: pointer;
+}
+#editor::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(249, 60%, 48%);
+}

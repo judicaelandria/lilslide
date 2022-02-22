@@ -1,205 +1,78 @@
-import { ChangeEvent, useState, useRef, useEffect } from "react";
+import { useMachine } from "@xstate/react";
+import React from "react";
 import type { LinksFunction } from "remix";
-import * as marked from "marked";
-import parseFrontMatter from "front-matter";
-
-import DesktopIcon from "~/icons/DesktopIcon";
+import { Editor, Preview } from "~/components";
+import Resize from "~/components/Resize";
+import dataMachine from "~/machines/dataMachine";
+import { Provider } from "~/providers";
 import styles from "~/styles/markdown.css";
-import { IAttributes } from "~/types";
-import ChevronLeftIcon from "~/icons/ChevronLeftIcon";
-import ChevronRightIcon from "~/icons/ChevronRightIcon";
-
-// const domPurify = DOMPurify(window as unknown as Window);
+import editorStyles from "~/styles/editor.css";
 
 export const links: LinksFunction = () => {
-  return [{ rel: "stylesheet", href: styles }];
+  return [
+    { rel: "stylesheet", href: styles },
+    { rel: "stylesheet", href: editorStyles },
+  ];
 };
 
-let count = 0;
-
 export default function Index() {
-  const [content, setContent] = useState<string>("");
-  const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
-  const containerRef = useRef<HTMLElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [pages, setPages] = useState<string[]>([]);
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [presentationState, setPresentationState] = React.useState(false);
+  const [previewWidth, setPreviewWidth] = React.useState<number>(0);
+  const [current, send] = useMachine(dataMachine);
+  const { lilslideData } = current.context;
+  const containerRef = React.useRef<HTMLElement>(null);
 
-  const hasPrev = count > 0;
-  const hasNext = currentIndex < pages.length - 1;
-
-  const handleClickNext = () => {
-    count = (count + 1) % pages.length;
-    setCurrentIndex(count);
+  const getPresentationState = () => {
+    setPresentationState(true);
   };
 
-  const handleClickPrev = () => {
-    const pagesLength = pages.length;
-    count = (currentIndex + pagesLength - 1) % pagesLength;
-    setCurrentIndex(count);
+  const getPreviewWidth = (width: number) => {
+    setPreviewWidth(containerRef.current!.clientWidth - width);
   };
 
-  // used to extract all the custom style
-  // inside ---
-  const extractCustomStyle = (code: string) => {
-    try {
-      const { attributes }: { attributes: IAttributes } =
-        parseFrontMatter(code);
-      if (containerRef.current && containerRef.current) {
-        if (attributes.color)
-          contentRef!.current!.style.color = attributes.color;
-        if (attributes.align)
-          contentRef!.current!.style.textAlign = attributes.align;
-        if (attributes?.backgroundColor)
-          containerRef.current.style.background = attributes.backgroundColor;
-        else if (attributes?.backgroundImage)
-          containerRef.current.style.background = `no-repeat center/cover url(${attributes.backgroundImage})`;
-      }
-    } catch (error) {
-      console.log({ error });
+  const togglePresentationMode = (event: KeyboardEvent) => {
+    if (event.key === "F8") setPresentationState(true);
+  };
+
+  const bundleShortcut = (event: KeyboardEvent) => {
+    if ((event.metaKey || event.ctrlKey) && event.key === "s") {
+      event.preventDefault();
+      lilslideData.push({
+        id: lilslideData.length + 1,
+        name: "test",
+        content: "content",
+      });
+      send({ type: "SAVE", lilslideData });
     }
   };
 
-  const createNewPage = (content: string) => {
-    if (content.includes("#nextslide")) {
-      const customPages = content.split("#nextslide");
-      if (customPages.length > 1) {
-        setPages(customPages);
-      }
-    }
-  };
+  React.useEffect(() => {
+    window.addEventListener("keydown", togglePresentationMode);
+    return () => window.removeEventListener("keydown", togglePresentationMode);
+  }, []);
 
-  useEffect(() => {
-    createNewPage(content);
-    extractCustomStyle(content);
-  }, [content]);
+  React.useEffect(() => {
+    setTimeout(() => setPresentationState(false), 1000);
+  }, [presentationState]);
 
-  const renderMarkdownText = (code: string) => {
-    const content = removeCustomStyle(code);
-    const __html = marked.marked(content, {
-      sanitize: true,
-    });
-    // const __html = domPurify.sanitize(dirtyContent);
-    return { __html };
-  };
-
-  const removeCustomStyle = (code: string): string => {
-    return code.replace(
-      code.slice(code.indexOf("-"), code.lastIndexOf("-")),
-      ""
-    );
-  };
-
-  const handleContentChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
-    setContent(event.target.value);
-  };
-
-  // Gonna need this later
-  /*
-  const syntaxHiglighter = (code: string) => {
-    marked.marked.setOptions({
-      highlight: function (code, lang, callback) {
-        require("pygmentize-bundled")(
-          { lang: lang, format: "html" },
-          code,
-          function (err: any, result: any) {
-            callback?.(err, result.toString());
-          }
-        );
-      },
-    });
-
-    return marked.marked.parse(code);
-  };
-  */
-
-  const toggleFullScreen = () => {
-    if (!isFullScreen) {
-      containerRef.current?.requestFullscreen();
-      setIsFullScreen(true);
-    } else {
-      setIsFullScreen(false);
-      document.exitFullscreen();
-    }
-  };
+  React.useEffect(() => {
+    window.addEventListener("keydown", bundleShortcut);
+    return () => window.removeEventListener("keydown", bundleShortcut);
+  }, []);
 
   return (
-    <main className="w-full min-h-screen">
-      <article className="w-full flex">
-        <section className="w-2/5 max-h-screen min-h-screen relative border-r-4 border-darkGrey bg-bgColor">
-          <div className="min-w-min h-10 p-2 rounded-br-lg absolute top-0 left-0 bg-darkGrey">
-            <h4 className="text-white font-medium text-base">
-              Presentation.md
-            </h4>
-          </div>
-          {/* the code editor */}
-          <textarea
-            value={content}
-            onChange={handleContentChange}
-            className="pt-16 pl-2 text-lg w-full h-full border-none bg-bgColor text-white overflow-y-auto focus:outline-none resize-none"
-          />
-        </section>
-        <section
-          ref={containerRef}
-          className={`${
-            isFullScreen ? "w-full" : "w-3/5"
-          } min-h-screen relative`}
-        >
-          {pages.length > 1 ? (
-            <div className="w-full relative m-auto">
-              <div
-                ref={contentRef}
-                className={`min-h-screen w-full pl-3 text-bgColor flex flex-col justify-center`}
-                dangerouslySetInnerHTML={renderMarkdownText(
-                  pages[currentIndex]
-                )}
-              />
-              <div className="absolute w-full bottom-2 transform -translate-y-1/2 flex justify-end items-start px-3 gap-6">
-                <div
-                  title={`${isFullScreen ? "Exit" : "Toggle"} full screen`}
-                  className="bg-darkGrey rounded-full flex justify-center items-center w-8 h-8 opacity-50 hover:opacity-90 cursor-pointer duration-300"
-                  onClick={toggleFullScreen}
-                >
-                  <DesktopIcon />
-                </div>
-                <button
-                  className={`bg-darkGrey rounded-full flex justify-center items-center w-8 h-8 opacity-50 ${
-                    hasPrev ? "hover:opacity-90 cursor-pointer" : ""
-                  } duration-300`}
-                  onClick={handleClickPrev}
-                  disabled={!hasPrev}
-                >
-                  <ChevronLeftIcon />
-                </button>
-                <button
-                  className={`bg-darkGrey rounded-full flex justify-center items-center w-8 h-8 opacity-50 ${
-                    hasNext ? "hover:opacity-90 cursor-pointer" : ""
-                  } duration-300`}
-                  onClick={handleClickNext}
-                  disabled={!hasNext}
-                >
-                  <ChevronRightIcon />
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div
-                title={`${isFullScreen ? "Exit" : "Toggle"} full screen`}
-                className="absolute bottom-2 right-2 bg-darkGrey rounded-full flex justify-center items-center w-8 h-8 opacity-50 hover:opacity-90 cursor-pointer duration-300"
-                onClick={toggleFullScreen}
-              >
-                <DesktopIcon />
-              </div>
-              <div
-                ref={contentRef}
-                className={`min-h-screen w-full pl-3 text-bgColor flex flex-col justify-center`}
-                dangerouslySetInnerHTML={renderMarkdownText(content)}
-              />
-            </>
-          )}
-        </section>
-      </article>
-    </main>
+    <Provider>
+      <main className="w-full min-h-screen">
+        <article className="w-full flex" ref={containerRef}>
+          <Resize
+            className="min-h-screen bg-darkBlue"
+            getPreviewWidth={getPreviewWidth}
+          >
+            <Editor getPresentationState={getPresentationState} />
+          </Resize>
+          <Preview presentation={presentationState} width={previewWidth} />
+        </article>
+      </main>
+    </Provider>
   );
 }
