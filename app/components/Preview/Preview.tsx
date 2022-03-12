@@ -1,30 +1,26 @@
 import React from "react";
-import * as marked from "marked";
+import { marked } from "marked";
 import parseFrontMatter from "front-matter";
-import { useActor } from "@xstate/react";
 
 import { IAttributes } from "~/types";
 import { ChevronLeftIcon, ChevronRightIcon } from "~/icons";
-import { ContentContext } from "~/contexts";
+import hljs from "highlight.js";
 interface IPreviewProps {
   presentation: boolean;
   width: number;
+  content: string;
 }
 
 let count = 0;
 
-const Preview = ({ presentation, width }: IPreviewProps) => {
+const Preview = ({ presentation, width, content }: IPreviewProps) => {
   const containerRef = React.useRef<HTMLElement>(null);
   const contentRef = React.useRef<HTMLDivElement>(null);
   const [pages, setPages] = React.useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = React.useState<number>(0);
-  const globalServices = React.useContext(ContentContext);
-  const [current] = useActor(globalServices.contentService);
 
-  const { content } = current.context;
-
-  const hasPrev = count > 0;
-  const hasNext = currentIndex < pages.length - 1;
+  const hasNext = Boolean(currentIndex < pages.length - 1);
+  const hasPrev = Boolean(count > 0);
 
   const handleClickNext = () => {
     count = (count + 1) % pages.length;
@@ -77,19 +73,33 @@ const Preview = ({ presentation, width }: IPreviewProps) => {
   React.useEffect(() => {
     createNewPage(content);
     extractCustomStyle(content);
+    extractHTML(content);
   }, [content]);
 
   const renderMarkdownText = (code: string) => {
-    const content = removeCustomStyle(code);
-    const __html = marked.marked(content, {
+    marked.setOptions({
+      langPrefix: "hljs language-",
+      highlight: function (code) {
+        return hljs.highlightAuto(code, [
+          "javascript",
+          "css",
+          "html",
+          "rust",
+          "typescript",
+          "jsx",
+        ]).value;
+      },
+    });
+    const html = extractHTML(code);
+    const __html = marked(html, {
       sanitize: true,
     });
     return { __html };
   };
 
-  const removeCustomStyle = (code: string): string => {
+  const extractHTML = (code: string) => {
     return code.replace(
-      code.slice(code.indexOf("-"), code.lastIndexOf("-")),
+      code.slice(code.indexOf("---"), code.lastIndexOf("---")),
       ""
     );
   };
@@ -110,12 +120,13 @@ const Preview = ({ presentation, width }: IPreviewProps) => {
         <div className="w-full relative m-auto">
           <div
             ref={contentRef}
-            className="min-h-screen w-full px-3 text-bgColor flex flex-col"
+            className="min-h-screen w-full px-3 text-bgColor flex flex-col justify-center"
+            id="preview"
             dangerouslySetInnerHTML={renderMarkdownText(pages[currentIndex])}
           />
           <div className="absolute w-full bottom-2 transform -translate-y-1/2 flex justify-end items-start px-3 gap-6">
             <button
-              className={`bg-darkGrey rounded-full flex justify-center items-center w-8 h-8 opacity-50 ${
+              className={`bg-darkBlue/80 rounded-full flex justify-center items-center w-8 h-8 opacity-50 ${
                 hasPrev ? "hover:opacity-90 cursor-pointer" : ""
               } duration-300`}
               onClick={handleClickPrev}
@@ -124,7 +135,7 @@ const Preview = ({ presentation, width }: IPreviewProps) => {
               <ChevronLeftIcon />
             </button>
             <button
-              className={`bg-darkGrey rounded-full flex justify-center items-center w-8 h-8 opacity-50 ${
+              className={`bg-darkBlue/80 rounded-full flex justify-center items-center w-8 h-8 opacity-50 ${
                 hasNext ? "hover:opacity-90 cursor-pointer" : ""
               } duration-300`}
               onClick={handleClickNext}
@@ -138,8 +149,9 @@ const Preview = ({ presentation, width }: IPreviewProps) => {
         <>
           <div
             ref={contentRef}
-            className={`min-h-screen w-full px-3 text-bgColor flex flex-col justify-center`}
+            className="min-h-screen w-full px-3 text-bgColor flex flex-col justify-center"
             dangerouslySetInnerHTML={renderMarkdownText(content)}
+            id="preview"
           />
         </>
       )}
