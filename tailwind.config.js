@@ -3,9 +3,12 @@ module.exports = {
   theme: {
     colors: {
       current: "currentColor",
-      bgColor: "#111111",
+      transparent: "transparent",
+      darkBlue: "#1E293B",
+      blue: {
+        100: "#4731C5",
+      },
       white: "#ffffff",
-      darkGrey: "#1f1f1f",
     },
     extend: {},
   },
