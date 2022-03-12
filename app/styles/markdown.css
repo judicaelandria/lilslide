@@ -1,10 +1,11 @@
-pre {
-  width: 100%;
-  height: auto;
-  border-radius: 4px;
-  background-color: #181818de;
-  padding: 8px;
-  color: #fff;
+:root {
+  --dark-blue: #011627;
+  --blue: #5773ff;
+  --violet: #9379f9;
+}
+
+#preview:first-child hr {
+  display: none;
 }
 
 h1 {
@@ -21,4 +22,62 @@ h3 {
 
 a {
   color: blue;
+}
+
+pre {
+  background-color: var(--dark-blue);
+  border-radius: 8px;
+  margin: 18px 0px;
+  padding: 12px;
+  color: white;
+}
+
+code {
+  background-color: inherit !important;
+}
+
+blockquote {
+  background-color: var(--dark-blue);
+  border-radius: 0 8px 8px 0;
+  margin: 18px 0px;
+  padding: 16px;
+  border-left-width: 4px;
+  border-left-color: var(--blue);
+}
+
+.hljs {
+  color: white !important;
+}
+
+.hljs-keyword {
+  color: var(--violet) !important;
+}
+
+.function_,
+.class_,
+.hljs-tag,
+.hljs-property {
+  color: var(--blue) !important;
+}
+
+.hljs-selector-class,
+.language_ {
+  color: #ff38a8;
+}
+
+.hljs-attribute {
+  color: #c653ff;
+}
+
+.hljs-string {
+  color: white;
+  opacity: 0.6;
+}
+
+.hljs-comment,
+.hljs-quote,
+.hljs-deletion,
+.hljs-meta {
+  color: white;
+  opacity: 0.6;
 }
