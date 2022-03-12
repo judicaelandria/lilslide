@@ -2,7 +2,7 @@
 
 This a web application to create slide using the power of markdown and some custom function that I made
 
-![lilslide](slider.png)
+![lilslide](slide.png)
 
 Tasks that's already implemented and needs to be implemented
 
@@ -31,4 +31,5 @@ You can add style to your slide, you just need to add the style like this
 - **_backgroundImage_** : to add background image (you need to provide a link to your image)
 - **_backgroundColor_** : to add background color (only support rgb color for now, support for hex and hsl will be added), and use linear-gradient
 - **_color_** : for the text color
-- **_align_** : to align the content (left, center, right)
+- **_justifyContent_**
+- **_alignItems_**
