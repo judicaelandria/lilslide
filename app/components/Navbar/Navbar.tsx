@@ -12,19 +12,20 @@ const Navbar = ({ toggleFullscreen }: INavbarProps) => {
 
   return (
     <div className="w-full h-18 flex justify-between items-center bg-darkBlue px-4 py-2 drop-shadow-xl">
-      <img src="/images/logo.svg" />
+      <img src="/images/logo.svg" alt="lilslide playground logo" />
       <input
         className="outline-none bg-transparent text-white focus:border-b"
         type="text"
         value={name}
         onChange={handleNameChange}
         style={{ width: name.length + "ch" }}
+        data-testid="slide-name-input"
       />
       <button
         className="bg-blue-100 w-20 h-10 rounded-lg flex justify-center items-center gap-2"
         onClick={toggleFullscreen}
       >
-        <img src="/images/playIcon.svg" />
+        <img src="/images/playIcon.svg" alt="Play icon" />
         <span className="text-base text-white font-medium">Play</span>
       </button>
     </div>

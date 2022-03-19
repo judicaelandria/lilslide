@@ -34,6 +34,7 @@ const Editor = React.memo(
           className="pt-1 pl-2 text-lg w-full border-none bg-darkBlue text-white overflow-y-auto focus:outline-none resize-none"
           style={{ height: "91.7vh" }}
           id="editor"
+          data-testid="slide-content"
         />
         <div
           className="absolute right-4 bg-blue-100/60"
