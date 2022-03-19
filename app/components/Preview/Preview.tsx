@@ -115,6 +115,7 @@ const Preview = ({ presentation, width, content }: IPreviewProps) => {
       ref={containerRef}
       className="min-h-screen relative bg-white"
       style={{ width }}
+      data-testid="container"
     >
       {pages.length > 1 ? (
         <div className="w-full relative m-auto">
