@@ -2,7 +2,7 @@
 
 This a web application to create slide using the power of markdown and some custom function that I made
 
-![lilslide](slide.png)
+![lilslide](./slide.PNG)
 
 Tasks that's already implemented and needs to be implemented
 
